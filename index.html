@@ -1,3 +1,974 @@
+Gemini
+3D Training Websites & Resources
+Conversation with Gemini
+You said
+good examples of 3d training websites
+Gemini said
+Effective 3D training resources are categorized by their specialization, such as generalist art, industry-specific pipelines (VFX/Games), or software-specific mastery.
+
+Comprehensive & Professional Platforms
+These platforms offer structured, high-production-value courses often taught by industry veterans from studios like Blizzard, ILM, or Ubisoft.
+
+Platform	Best For	Focus Areas
+The Gnomon Workshop	Professional Industry Prep	VFX, Sculpting, Environment Art, Maya, ZBrush
+FlippedNormals	Specialized Techniques	Character Art, Game-ready Assets, Texturing
+CG Spectrum	Career-tracked Mentorship	Animation, VFX, Game Design, 3D Modeling
+Motion Design School	Motion Graphics	Cinema 4D, After Effects, 3D Animation
+School of Motion	3D Design & Workflow	C4D, Unreal Engine, Rendering
+Software-Specific Mastery
+If you have selected a specific tool, these sites provide the deepest technical dives.
+
+Blender Studio: The official training hub for Blender. It features high-end production files and "open movie" assets to study professional-grade rigging and lighting.
+
+Epic Developer Community (Unreal Engine): Extensive, free official documentation and guided learning paths for real-time rendering, blueprints, and environment design.
+
+SideFX Houdini Training: The primary source for learning procedural generation and high-end simulation (fluids, fire, destruction).
+
+ZBrushGuides: Highly focused resources for digital sculpting and anatomical precision.
+
+Generalist & Skill-Based Learning
+Best for beginners or those looking for diverse project-based tutorials.
+
+Udemy: Contains high-rated, comprehensive "bootcamps" (e.g., GameDev.tv or 3D Tudor) that cover the entire pipeline from modeling to game engine export.
+
+Skillshare: Strong for stylized 3D art, introductory modeling, and integrating 3D into graphic design workflows.
+
+Coursera: Offers university-backed specializations, such as the Introduction to 3D Modeling from the University of Michigan, focusing on theoretical foundations.
+
+Specialized Niche Platforms
+Learn 3D Fashion: Specifically for CLO3D and digital garment construction.
+
+Sculpteo Studio: Specialized tutorials for 3D Printing and additive manufacturing optimization.
+
+FastTrack Tutorials: High-intensity, project-oriented tutorials for environment artists using Maya, 3ds Max, and Unreal Engine 5.
+
+Would you like me to find specific beginner roadmaps for one of these software packages?
+
+You said
+make a html site when you can ' pull apart' a 3d model into component parts using ',' and '.' keys, then identify components on. mouse over
+Gemini said
+HTML
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Exploded View Controller</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #050505; font-family: monospace; }
+        #ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #00ff00;
+            pointer-events: none;
+            text-transform: uppercase;
+        }
+        #label {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #ffffff;
+            font-size: 1.5rem;
+            background: rgba(0,0,0,0.8);
+            padding: 10px 20px;
+            border: 1px solid #444;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div id="ui">
+    [.] - Explode Components<br>
+    [,] - Reassemble Components<br>
+    [Mouse Over] - Identify Parts
+</div>
+<div id="label"></div>
+
+<script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
+        }
+    }
+</script>
+
+<script type="module">
+    import * as THREE from 'three';
+
+    // Initialization
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    const label = document.getElementById('label');
+
+    // Lighting
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    scene.add(ambientLight);
+    const pointLight = new THREE.PointLight(0xffffff, 1);
+    pointLight.position.set(10, 10, 10);
+    scene.add(pointLight);
+
+    // Model Construction (Component Group)
+    const modelGroup = new THREE.Group();
+    const components = [];
+
+    const partData = [
+        { name: "Core Module", color: 0xff0000, pos: [0, 0, 0], dim: [1, 1, 1] },
+        { name: "Left Wing", color: 0x00ff00, pos: [-1.5, 0, 0], dim: [2, 0.2, 1] },
+        { name: "Right Wing", color: 0x00ff00, pos: [1.5, 0, 0], dim: [2, 0.2, 1] },
+        { name: "Top Sensor", color: 0x0000ff, pos: [0, 1, 0], dim: [0.5, 0.5, 0.5] },
+        { name: "Front Lens", color: 0xffff00, pos: [0, 0, 1], dim: [0.8, 0.8, 0.2] }
+    ];
+
+    partData.forEach(data => {
+        const geometry = new THREE.BoxGeometry(...data.dim);
+        const material = new THREE.MeshStandardMaterial({ color: data.color });
+        const mesh = new THREE.Mesh(geometry, material);
+        
+        mesh.userData.name = data.name;
+        mesh.userData.originalPos = new THREE.Vector3(...data.pos);
+        mesh.position.set(...data.pos);
+        
+        components.push(mesh);
+        modelGroup.add(mesh);
+    });
+
+    scene.add(modelGroup);
+    camera.position.z = 8;
+
+    // Explosion Logic
+    let explodeFactor = 0;
+    const explodeSpeed = 0.05;
+
+    window.addEventListener('keydown', (e) => {
+        if (e.key === '.') explodeFactor += explodeSpeed;
+        if (e.key === ',') explodeFactor = Math.max(0, explodeFactor - explodeSpeed);
+    });
+
+    window.addEventListener('mousemove', (e) => {
+        mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    });
+
+    function animate() {
+        requestAnimationFrame(animate);
+
+        // Update Component Positions
+        components.forEach(mesh => {
+            const offset = mesh.userData.originalPos.clone().multiplyScalar(explodeFactor);
+            mesh.position.copy(mesh.userData.originalPos).add(offset);
+        });
+
+        // Raycasting for Identification
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(components);
+
+        if (intersects.length > 0) {
+            label.style.display = 'block';
+            label.innerText = intersects[0].object.userData.name;
+            intersects[0].object.material.emissive.setHex(0x333333);
+        } else {
+            label.style.display = 'none';
+            components.forEach(m => m.material.emissive.setHex(0x000000));
+        }
+
+        modelGroup.rotation.y += 0.005;
+        renderer.render(scene, camera);
+    }
+
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    animate();
+</script>
+</body>
+</html>
+You said
+use this model - located in same folder
+Gemini said
+HTML
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Model Exploder</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #111; font-family: monospace; }
+        #ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #fff;
+            pointer-events: none;
+            background: rgba(0,0,0,0.5);
+            padding: 10px;
+        }
+        #label {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #00ff00;
+            font-size: 1.2rem;
+            background: rgba(0,0,0,0.8);
+            padding: 8px 16px;
+            border: 1px solid #00ff00;
+            display: none;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+<div id="ui">
+    [.] PULL APART<br>
+    [,] ASSEMBLE<br>
+    MOUSE OVER TO IDENTIFY
+</div>
+<div id="label"></div>
+
+<script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+</script>
+
+<script type="module">
+    import * as THREE from 'three';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.01, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    document.body.appendChild(renderer.domElement);
+
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    const label = document.getElementById('label');
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1);
+    scene.add(ambientLight);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 2);
+    directionalLight.position.set(5, 5, 5);
+    scene.add(directionalLight);
+
+    let components = [];
+    let explodeFactor = 0;
+
+    const loader = new GLTFLoader();
+    // Path relative to the current environment
+    loader.load('90l_fire_extinguisher.glb', (gltf) => {
+        const model = gltf.scene;
+        
+        // Center model
+        const box = new THREE.Box3().setFromObject(model);
+        const center = box.getCenter(new THREE.Vector3());
+        model.position.sub(center);
+
+        model.traverse((child) => {
+            if (child.isMesh) {
+                // Store world position for explosion vector calculation
+                const worldPos = new THREE.Vector3();
+                child.getWorldPosition(worldPos);
+                
+                child.userData.originalPos = child.position.clone();
+                // Explosion vector is direction from model center (0,0,0) to part center
+                child.userData.explodeVec = worldPos.clone().normalize();
+                
+                components.push(child);
+            }
+        });
+
+        scene.add(model);
+        camera.position.set(0, 0.2, 0.8);
+    }, undefined, (error) => {
+        console.error('Error loading model:', error);
+    });
+
+    window.addEventListener('keydown', (e) => {
+        if (e.key === '.') explodeFactor += 0.05;
+        if (e.key === ',') explodeFactor = Math.max(0, explodeFactor - 0.05);
+    });
+
+    window.addEventListener('mousemove', (e) => {
+        mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    });
+
+    function animate() {
+        requestAnimationFrame(animate);
+
+        components.forEach(mesh => {
+            const shift = mesh.userData.explodeVec.clone().multiplyScalar(explodeFactor);
+            mesh.position.copy(mesh.userData.originalPos).add(shift);
+        });
+
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(components);
+
+        if (intersects.length > 0) {
+            const target = intersects[0].object;
+            label.style.display = 'block';
+            label.innerText = target.name || "Unnamed Component";
+            
+            components.forEach(m => m.material.emissive?.setHex(0x000000));
+            if(target.material.emissive) target.material.emissive.setHex(0x222222);
+        } else {
+            label.style.display = 'none';
+            components.forEach(m => m.material.emissive?.setHex(0x000000));
+        }
+
+        renderer.render(scene, camera);
+    }
+
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    animate();
+</script>
+</body>
+</html>
+You said
+allow usual manipulation of 3d model via mouse etc, scale model to 50% of screen, make the ',' and '.' smooth and continual
+Gemini said
+HTML
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Component Explorer</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #0a0a0a; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        #ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #ffffff;
+            pointer-events: none;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            padding: 15px;
+            border-radius: 4px;
+            border-left: 3px solid #00ff00;
+        }
+        #label {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #00ff00;
+            font-size: 1.4rem;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(0,255,0,0.5);
+            background: rgba(0,0,0,0.8);
+            padding: 10px 25px;
+            border: 1px solid #333;
+            display: none;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+<div id="ui">
+    HOLD [.] EXPLODE<br>
+    HOLD [,] ASSEMBLE<br>
+    MOUSE DRAG TO ROTATE<br>
+    SCROLL TO ZOOM
+</div>
+<div id="label"></div>
+
+<script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+</script>
+
+<script type="module">
+    import * as THREE from 'three';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.01, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    document.body.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    const label = document.getElementById('label');
+
+    scene.add(new THREE.AmbientLight(0xffffff, 1.5));
+    const dirLight = new THREE.DirectionalLight(0xffffff, 2);
+    dirLight.position.set(5, 10, 7);
+    scene.add(dirLight);
+
+    let components = [];
+    let explodeTarget = 0;
+    let currentExplode = 0;
+    const keys = { period: false, comma: false };
+
+    const loader = new GLTFLoader();
+    loader.load('90l_fire_extinguisher.glb', (gltf) => {
+        const model = gltf.scene;
+        
+        const box = new THREE.Box3().setFromObject(model);
+        const size = box.getSize(new THREE.Vector3());
+        const center = box.getCenter(new THREE.Vector3());
+        
+        // Scale to 50% of screen height
+        const targetHeight = 2.0; 
+        const scaleFactor = targetHeight / size.y;
+        model.scale.set(scaleFactor, scaleFactor, scaleFactor);
+        
+        model.position.sub(center.multiplyScalar(scaleFactor));
+
+        model.traverse((child) => {
+            if (child.isMesh) {
+                child.userData.originalPos = child.position.clone();
+                // Calculate local explosion vector based on geometry center
+                child.geometry.computeBoundingBox();
+                const meshCenter = new THREE.Vector3();
+                child.geometry.boundingBox.getCenter(meshCenter);
+                child.userData.explodeVec = meshCenter.normalize();
+                
+                components.push(child);
+            }
+        });
+
+        scene.add(model);
+        camera.position.set(0, 0, 5);
+        controls.update();
+    });
+
+    window.addEventListener('keydown', (e) => {
+        if (e.key === '.') keys.period = true;
+        if (e.key === ',') keys.comma = true;
+    });
+
+    window.addEventListener('keyup', (e) => {
+        if (e.key === '.') keys.period = false;
+        if (e.key === ',') keys.comma = false;
+    });
+
+    window.addEventListener('mousemove', (e) => {
+        mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    });
+
+    function animate() {
+        requestAnimationFrame(animate);
+
+        // Continuous Smooth Logic
+        if (keys.period) explodeTarget += 0.02;
+        if (keys.comma) explodeTarget -= 0.02;
+        explodeTarget = Math.max(0, Math.min(explodeTarget, 3.0));
+        
+        // Linear Interpolation for smoothness
+        currentExplode += (explodeTarget - currentExplode) * 0.1;
+
+        components.forEach(mesh => {
+            const shift = mesh.userData.explodeVec.clone().multiplyScalar(currentExplode);
+            mesh.position.copy(mesh.userData.originalPos).add(shift);
+        });
+
+        controls.update();
+
+        // Raycasting
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(components);
+
+        if (intersects.length > 0) {
+            const target = intersects[0].object;
+            label.style.display = 'block';
+            label.innerText = target.name || "Component Part";
+            components.forEach(m => m.material.emissive?.setHex(0x000000));
+            if(target.material.emissive) target.material.emissive.setHex(0x333333);
+        } else {
+            label.style.display = 'none';
+            components.forEach(m => m.material.emissive?.setHex(0x000000));
+        }
+
+        renderer.render(scene, camera);
+    }
+
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    animate();
+</script>
+</body>
+</html>
+You said
+add = and - keys to scale model
+Gemini said
+HTML
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Component Explorer</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #0a0a0a; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        #ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #ffffff;
+            pointer-events: none;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            padding: 15px;
+            border-radius: 4px;
+            border-left: 3px solid #00ff00;
+        }
+        #label {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #00ff00;
+            font-size: 1.4rem;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(0,255,0,0.5);
+            background: rgba(0,0,0,0.8);
+            padding: 10px 25px;
+            border: 1px solid #333;
+            display: none;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+<div id="ui">
+    HOLD [.] EXPLODE | [,] ASSEMBLE<br>
+    HOLD [=] ENLARGE | [-] SHRINK<br>
+    MOUSE DRAG TO ROTATE | SCROLL TO ZOOM
+</div>
+<div id="label"></div>
+
+<script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+</script>
+
+<script type="module">
+    import * as THREE from 'three';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.01, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    document.body.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    const label = document.getElementById('label');
+
+    scene.add(new THREE.AmbientLight(0xffffff, 1.5));
+    const dirLight = new THREE.DirectionalLight(0xffffff, 2);
+    dirLight.position.set(5, 10, 7);
+    scene.add(dirLight);
+
+    let modelRoot = new THREE.Group();
+    let components = [];
+    let explodeTarget = 0;
+    let currentExplode = 0;
+    
+    let baseScale = 1.0;
+    let targetScale = 1.0;
+    
+    const keys = { 
+        period: false, 
+        comma: false, 
+        equals: false, 
+        minus: false 
+    };
+
+    const loader = new GLTFLoader();
+    loader.load('90l_fire_extinguisher.glb', (gltf) => {
+        const model = gltf.scene;
+        
+        const box = new THREE.Box3().setFromObject(model);
+        const size = box.getSize(new THREE.Vector3());
+        const center = box.getCenter(new THREE.Vector3());
+        
+        // Initial normalization: fit to reference height
+        const targetHeight = 2.0; 
+        baseScale = targetHeight / size.y;
+        targetScale = baseScale;
+        
+        model.position.sub(center);
+        modelRoot.add(model);
+        modelRoot.scale.set(baseScale, baseScale, baseScale);
+
+        model.traverse((child) => {
+            if (child.isMesh) {
+                child.userData.originalPos = child.position.clone();
+                child.geometry.computeBoundingBox();
+                const meshCenter = new THREE.Vector3();
+                child.geometry.boundingBox.getCenter(meshCenter);
+                child.userData.explodeVec = meshCenter.normalize();
+                components.push(child);
+            }
+        });
+
+        scene.add(modelRoot);
+        camera.position.set(0, 0, 5);
+        controls.update();
+    });
+
+    window.addEventListener('keydown', (e) => {
+        if (e.key === '.') keys.period = true;
+        if (e.key === ',') keys.comma = true;
+        if (e.key === '=') keys.equals = true;
+        if (e.key === '-') keys.minus = true;
+    });
+
+    window.addEventListener('keyup', (e) => {
+        if (e.key === '.') keys.period = false;
+        if (e.key === ',') keys.comma = false;
+        if (e.key === '=') keys.equals = false;
+        if (e.key === '-') keys.minus = false;
+    });
+
+    window.addEventListener('mousemove', (e) => {
+        mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    });
+
+    function animate() {
+        requestAnimationFrame(animate);
+
+        // Explosion handling
+        if (keys.period) explodeTarget += 0.02;
+        if (keys.comma) explodeTarget -= 0.02;
+        explodeTarget = Math.max(0, Math.min(explodeTarget, 3.0));
+        currentExplode += (explodeTarget - currentExplode) * 0.1;
+
+        // Scaling handling
+        if (keys.equals) targetScale *= 1.02;
+        if (keys.minus) targetScale *= 0.98;
+        targetScale = Math.max(0.1, Math.min(targetScale, 10.0));
+        
+        const s = modelRoot.scale.x + (targetScale - modelRoot.scale.x) * 0.1;
+        modelRoot.scale.set(s, s, s);
+
+        components.forEach(mesh => {
+            const shift = mesh.userData.explodeVec.clone().multiplyScalar(currentExplode);
+            mesh.position.copy(mesh.userData.originalPos).add(shift);
+        });
+
+        controls.update();
+
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(components);
+
+        if (intersects.length > 0) {
+            const target = intersects[0].object;
+            label.style.display = 'block';
+            label.innerText = target.name || "Component Part";
+            components.forEach(m => m.material.emissive?.setHex(0x000000));
+            if(target.material.emissive) target.material.emissive.setHex(0x333333);
+        } else {
+            label.style.display = 'none';
+            components.forEach(m => m.material.emissive?.setHex(0x000000));
+        }
+
+        renderer.render(scene, camera);
+    }
+
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    animate();
+</script>
+</body>
+</html>
+You said
+make full screen - use same ui and colors as view.xrtraininglabs.co.uk
+Gemini said
+HTML
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Component Explorer</title>
+    <style>
+        :root {
+            --brand-cyan: #00e5ff;
+            --brand-dark: #0a0a0a;
+            --ui-bg: rgba(10, 10, 10, 0.85);
+        }
+        body { margin: 0; overflow: hidden; background: var(--brand-dark); font-family: 'Inter', sans-serif; }
+        
+        #ui-overlay {
+            position: absolute;
+            top: 24px;
+            left: 24px;
+            color: #ffffff;
+            pointer-events: none;
+            background: var(--ui-bg);
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid var(--brand-cyan);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            line-height: 1.6;
+            letter-spacing: 0.5px;
+            font-size: 13px;
+        }
+
+        .key-hint {
+            color: var(--brand-cyan);
+            font-weight: bold;
+            display: inline-block;
+            width: 20px;
+        }
+
+        #label {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #ffffff;
+            font-size: 1.2rem;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            background: var(--ui-bg);
+            padding: 12px 30px;
+            border: 1px solid rgba(0, 229, 255, 0.3);
+            border-radius: 50px;
+            display: none;
+            pointer-events: none;
+            box-shadow: 0 0 20px rgba(0, 229, 255, 0.2);
+        }
+
+        canvas { display: block; width: 100vw; height: 100vh; }
+    </style>
+</head>
+<body>
+
+<div id="ui-overlay">
+    <div><span class="key-hint">.</span> EXPLODE VIEW</div>
+    <div><span class="key-hint">,</span> ASSEMBLE</div>
+    <div style="margin-top: 8px;"><span class="key-hint">=</span> INCREASE SCALE</div>
+    <div><span class="key-hint">-</span> DECREASE SCALE</div>
+    <div style="margin-top: 12px; opacity: 0.6; font-size: 11px;">
+        DRAG TO ROTATE • SCROLL TO ZOOM
+    </div>
+</div>
+<div id="label"></div>
+
+<script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+</script>
+
+<script type="module">
+    import * as THREE from 'three';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0a0a0a);
+    
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.01, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    document.body.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    const label = document.getElementById('label');
+
+    // Studio Lighting
+    scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+    const mainLight = new THREE.DirectionalLight(0xffffff, 2);
+    mainLight.position.set(5, 10, 7);
+    scene.add(mainLight);
+    const fillLight = new THREE.PointLight(0x00e5ff, 1);
+    fillLight.position.set(-5, 0, -5);
+    scene.add(fillLight);
+
+    let modelRoot = new THREE.Group();
+    let components = [];
+    let explodeTarget = 0;
+    let currentExplode = 0;
+    let targetScale = 1.0;
+    
+    const keys = { period: false, comma: false, equals: false, minus: false };
+
+    const loader = new GLTFLoader();
+    loader.load('90l_fire_extinguisher.glb', (gltf) => {
+        const model = gltf.scene;
+        
+        const box = new THREE.Box3().setFromObject(model);
+        const center = box.getCenter(new THREE.Vector3());
+        const size = box.getSize(new THREE.Vector3());
+        
+        // Initial setup
+        model.position.sub(center);
+        modelRoot.add(model);
+        
+        // Target 50% of viewport height
+        const vFOV = camera.fov * Math.PI / 180;
+        const height = 2 * Math.atan(vFOV / 2) * 5; // at dist 5
+        const initialScale = (height * 0.5) / size.y;
+        targetScale = initialScale;
+        modelRoot.scale.set(initialScale, initialScale, initialScale);
+
+        model.traverse((child) => {
+            if (child.isMesh) {
+                child.userData.originalPos = child.position.clone();
+                const worldPos = new THREE.Vector3();
+                child.getWorldPosition(worldPos);
+                child.userData.explodeVec = worldPos.clone().normalize();
+                
+                // Set brand highlight material properties
+                if (child.material) {
+                    child.material.emissiveIntensity = 0;
+                    child.material.emissive.setHex(0x00e5ff);
+                }
+                components.push(child);
+            }
+        });
+
+        scene.add(modelRoot);
+        camera.position.set(0, 0.5, 5);
+        controls.update();
+    });
+
+    window.addEventListener('keydown', (e) => {
+        if (e.key === '.') keys.period = true;
+        if (e.key === ',') keys.comma = true;
+        if (e.key === '=') keys.equals = true;
+        if (e.key === '-') keys.minus = true;
+    });
+
+    window.addEventListener('keyup', (e) => {
+        if (e.key === '.') keys.period = false;
+        if (e.key === ',') keys.comma = false;
+        if (e.key === '=') keys.equals = false;
+        if (e.key === '-') keys.minus = false;
+    });
+
+    window.addEventListener('mousemove', (e) => {
+        mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    });
+
+    function animate() {
+        requestAnimationFrame(animate);
+
+        // Explosion Transition
+        if (keys.period) explodeTarget += 0.03;
+        if (keys.comma) explodeTarget -= 0.03;
+        explodeTarget = Math.max(0, Math.min(explodeTarget, 2.5));
+        currentExplode += (explodeTarget - currentExplode) * 0.1;
+
+        // Scaling Transition
+        if (keys.equals) targetScale *= 1.02;
+        if (keys.minus) targetScale *= 0.98;
+        const s = modelRoot.scale.x + (targetScale - modelRoot.scale.x) * 0.1;
+        modelRoot.scale.set(s, s, s);
+
+        components.forEach(mesh => {
+            const shift = mesh.userData.explodeVec.clone().multiplyScalar(currentExplode);
+            mesh.position.copy(mesh.userData.originalPos).add(shift);
+        });
+
+        controls.update();
+
+        // Interaction
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(components);
+
+        if (intersects.length > 0) {
+            const target = intersects[0].object;
+            label.style.display = 'block';
+            label.innerText = target.name.replace(/_/g, ' ') || "SYSTEM COMPONENT";
+            components.forEach(m => m.material.emissiveIntensity = 0);
+            target.material.emissiveIntensity = 0.5;
+        } else {
+            label.style.display = 'none';
+            components.forEach(m => m.material.emissiveIntensity = 0);
+        }
+
+        renderer.render(scene, camera);
+    }
+
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    animate();
+</script>
+</body>
+</html>
+You said
+make full screen - with 'glass effect panel in to p center for instructions - centralize model on screen at start, and make small, make background color same as viewer.xrtraininglabs.co.uk
+Gemini said
+HTML
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -244,3 +1215,248 @@
 </script>
 </body>
 </html>
+You said
+explode all parts of model
+Gemini said
+HTML
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Component Explorer</title>
+    <style>
+        :root {
+            --brand-cyan: #00e5ff;
+            --brand-dark: #0f1113;
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+        
+        body { margin: 0; overflow: hidden; background: var(--brand-dark); font-family: 'Inter', sans-serif; }
+        
+        #instruction-panel {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #ffffff;
+            pointer-events: none;
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            padding: 15px 40px;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            display: flex;
+            gap: 30px;
+            z-index: 100;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .key {
+            background: rgba(255,255,255,0.15);
+            padding: 2px 8px;
+            border-radius: 4px;
+            color: var(--brand-cyan);
+            font-weight: 800;
+            border: 1px solid rgba(0, 229, 255, 0.3);
+        }
+
+        #label {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #ffffff;
+            font-size: 1rem;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            background: rgba(0,0,0,0.7);
+            padding: 8px 24px;
+            border-radius: 4px;
+            display: none;
+            pointer-events: none;
+            border-bottom: 2px solid var(--brand-cyan);
+        }
+
+        canvas { display: block; width: 100vw; height: 100vh; }
+    </style>
+</head>
+<body>
+
+<div id="instruction-panel">
+    <div class="control-group">
+        <span class="key">.</span>
+        <span class="key">,</span>
+        EXPLODE / ASSEMBLE
+    </div>
+    <div class="control-group">
+        <span class="key">=</span>
+        <span class="key">-</span>
+        SCALE MODEL
+    </div>
+</div>
+
+<div id="label"></div>
+
+<script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+</script>
+
+<script type="module">
+    import * as THREE from 'three';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0f1113);
+    
+    const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.01, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    document.body.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    const label = document.getElementById('label');
+
+    scene.add(new THREE.AmbientLight(0xffffff, 1.2));
+    const light1 = new THREE.DirectionalLight(0xffffff, 2);
+    light1.position.set(5, 10, 7);
+    scene.add(light1);
+
+    let modelRoot = new THREE.Group();
+    let components = [];
+    let explodeTarget = 0;
+    let currentExplode = 0;
+    let targetScale = 0.3;
+    
+    const keys = { period: false, comma: false, equals: false, minus: false };
+
+    const loader = new GLTFLoader();
+    loader.load('90l_fire_extinguisher.glb', (gltf) => {
+        const model = gltf.scene;
+        const box = new THREE.Box3().setFromObject(model);
+        const center = box.getCenter(new THREE.Vector3());
+        
+        model.position.sub(center);
+        modelRoot.add(model);
+        modelRoot.scale.set(targetScale, targetScale, targetScale);
+
+        model.traverse((child) => {
+            if (child.isMesh) {
+                // Ensure unique materials for emissive highlighting
+                child.material = child.material.clone();
+                
+                // Set initial local state
+                child.userData.originalPos = child.position.clone();
+                
+                // Calculate explosion vector from world center
+                const worldPos = new THREE.Vector3();
+                child.getWorldPosition(worldPos);
+                // Use normalized vector from center to create radial explosion
+                child.userData.explodeVec = worldPos.clone().normalize();
+                
+                components.push(child);
+            }
+        });
+
+        scene.add(modelRoot);
+        camera.position.set(0, 0, 5);
+        controls.update();
+    });
+
+    window.addEventListener('keydown', (e) => {
+        if (e.key === '.') keys.period = true;
+        if (e.key === ',') keys.comma = true;
+        if (e.key === '=') keys.equals = true;
+        if (e.key === '-') keys.minus = true;
+    });
+
+    window.addEventListener('keyup', (e) => {
+        if (e.key === '.') keys.period = false;
+        if (e.key === ',') keys.comma = false;
+        if (e.key === '=') keys.equals = false;
+        if (e.key === '-') keys.minus = false;
+    });
+
+    window.addEventListener('mousemove', (e) => {
+        mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    });
+
+    function animate() {
+        requestAnimationFrame(animate);
+
+        if (keys.period) explodeTarget += 0.02;
+        if (keys.comma) explodeTarget -= 0.02;
+        explodeTarget = Math.max(0, Math.min(explodeTarget, 5.0));
+        currentExplode += (explodeTarget - currentExplode) * 0.1;
+
+        if (keys.equals) targetScale *= 1.02;
+        if (keys.minus) targetScale *= 0.98;
+        targetScale = Math.max(0.05, Math.min(targetScale, 10.0));
+        const s = THREE.MathUtils.lerp(modelRoot.scale.x, targetScale, 0.1);
+        modelRoot.scale.set(s, s, s);
+
+        components.forEach(mesh => {
+            // Apply explosion translation along the pre-calculated vector
+            const shift = mesh.userData.explodeVec.clone().multiplyScalar(currentExplode);
+            mesh.position.copy(mesh.userData.originalPos).add(shift);
+        });
+
+        controls.update();
+
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(components);
+
+        if (intersects.length > 0) {
+            const target = intersects[0].object;
+            label.style.display = 'block';
+            label.innerText = target.name.replace(/_/g, ' ') || "COMPONENT";
+            components.forEach(m => m.material.emissiveIntensity = 0);
+            target.material.emissive.setHex(0x00e5ff);
+            target.material.emissiveIntensity = 0.6;
+        } else {
+            label.style.display = 'none';
+            components.forEach(m => m.material.emissiveIntensity = 0);
+        }
+
+        renderer.render(scene, camera);
+    }
+
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    animate();
+</script>
+</body>
+</html>
+
+
+
+Gemini is AI and can make mistakes, including about people. Your privacy and GeminiOpens in a new window
+
