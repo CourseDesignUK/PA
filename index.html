@@ -171,29 +171,53 @@
         };
 
         const updateExplosion = () => {
-            if (!internalScene) return;
-
-            if (explodeDirection !== 0) {
-                currentExplosion += explodeDirection * explodeSpeed;
-                currentExplosion = Math.max(0, Math.min(currentExplosion, 10));
+            if (!internalScene) {
+                if (isAnimating) requestAnimationFrame(updateExplosion);
+                return;
             }
 
-            internalScene.traverse((obj) => {
-                if (obj.isMesh) {
-                    if (!obj.userData.origPos) {
-                        obj.userData.origPos = obj.position.clone();
-                        
-                        obj.geometry.computeBoundingBox();
-                        const center = new THREE.Vector3();
-                        obj.geometry.boundingBox.getCenter(center);
-                        
-                        center.applyMatrix4(obj.matrixWorld);
-                        obj.userData.direction = center.normalize();
+            let needsRender = false;
+
+            if (explodeDirection !== 0) {
+                const prev = currentExplosion;
+                currentExplosion += explodeDirection * explodeSpeed;
+                currentExplosion = Math.max(0, Math.min(currentExplosion, 10));
+                if (currentExplosion !== prev) needsRender = true;
+            }
+
+            if (needsRender) {
+                internalScene.traverse((obj) => {
+                    if (obj.isMesh) {
+                        if (!obj.userData.origPos) {
+                            obj.userData.origPos = obj.position.clone();
+                            
+                            obj.geometry.computeBoundingBox();
+                            const center = new THREE.Vector3();
+                            obj.geometry.boundingBox.getCenter(center);
+                            center.applyMatrix4(obj.matrixWorld);
+                            
+                            const worldDir = center.normalize();
+                            const localDir = worldDir.clone();
+
+                            if (obj.parent) {
+                                const parentQuat = new THREE.Quaternion();
+                                obj.parent.getWorldQuaternion(parentQuat);
+                                localDir.applyQuaternion(parentQuat.invert());
+                            }
+
+                            obj.userData.localDirection = localDir;
+                        }
+                        const displacement = obj.userData.localDirection.clone().multiplyScalar(currentExplosion);
+                        obj.position.copy(obj.userData.origPos).add(displacement);
                     }
-                    const displacement = obj.userData.direction.clone().multiplyScalar(currentExplosion);
-                    obj.position.copy(obj.userData.origPos).add(displacement);
+                });
+
+                if (viewer.queueRender) {
+                    viewer.queueRender();
+                } else if (viewer.requestUpdate) {
+                    viewer.requestUpdate();
                 }
-            });
+            }
 
             if (isAnimating) requestAnimationFrame(updateExplosion);
         };
