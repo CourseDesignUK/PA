@@ -7,7 +7,7 @@
     <style>
         :root {
             --brand-cyan: #00e5ff;
-            --brand-light-blue: #1a2a40; /* Lighter background variable */
+            --brand-light-blue: #1a2a40;
             --glass-bg: rgba(255, 255, 255, 0.05);
             --glass-border: rgba(255, 255, 255, 0.2);
         }
@@ -20,7 +20,6 @@
             left: 50%;
             transform: translateX(-50%);
             color: #ffffff;
-            pointer-events: none;
             background: var(--glass-bg);
             backdrop-filter: blur(15px);
             -webkit-backdrop-filter: blur(15px);
@@ -29,12 +28,68 @@
             border: 1px solid var(--glass-border);
             box-shadow: 0 8px 32px rgba(0,0,0,0.2);
             display: flex;
-            gap: 30px;
+            align-items: center;
+            gap: 20px;
             z-index: 100;
         }
 
-        .control-group {
+        .model-selector-container {
             display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        select {
+            background: rgba(0, 0, 0, 0.3);
+            color: var(--brand-cyan);
+            border: 1px solid var(--glass-border);
+            padding: 5px 10px;
+            border-radius: 4px;
+            outline: none;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        option {
+            background: var(--brand-light-blue);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="instruction-panel">
+        <div class="model-selector-container">
+            <label for="model-select">Model:</label>
+            <select id="model-select">
+                <option value="">Select a Model</option>
+                <option value="models/model1.glb">Model 1</option>
+                <option value="models/model2.glb">Model 2</option>
+                <option value="models/model3.glb">Model 3</option>
+            </select>
+        </div>
+        <div>LMB: Rotate</div>
+        <div>RMB: Pan</div>
+        <div>Scroll: Zoom</div>
+    </div>
+
+    <script>
+        const modelSelect = document.getElementById('model-select');
+        
+        modelSelect.addEventListener('change', (event) => {
+            const selectedPath = event.target.value;
+            if (selectedPath) {
+                loadNewModel(selectedPath);
+            }
+        });
+
+        function loadNewModel(path) {
+            // Integration logic for Three.js GLTFLoader or similar 3D engine
+            console.log(`Loading model from: ${path}`);
+        }
+    </script>
+</body>
+</html>            display: flex;
             align-items: center;
             gap: 8px;
             font-size: 11px;
