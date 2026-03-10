@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Component Explorer</title>
+    <title>3D Component Explorer</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
     <style>
@@ -27,6 +27,7 @@
             width: 100vw;
             height: 100vh;
             background-color: var(--brand-bg);
+            outline: none;
         }
         
         #instruction-panel {
@@ -89,6 +90,23 @@
             width: 0%;
             transition: width 0.3s;
         }
+
+        #tooltip {
+            position: absolute;
+            background: rgba(10, 15, 30, 0.9);
+            color: var(--brand-cyan);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            pointer-events: none;
+            display: none;
+            z-index: 200;
+            border: 1px solid var(--glass-border);
+            text-transform: uppercase;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
     </style>
 </head>
 <body>
@@ -114,10 +132,12 @@
         </div>
         <div class="divider"></div>
         <div class="control-group">
-            <span class="key-hint">.</span> EXPLODE
-            <span class="key-hint">,</span> ASSEMBLE
+            <span class="key-hint">HOLD .</span> EXPLODE
+            <span class="key-hint">HOLD ,</span> ASSEMBLE
         </div>
     </div>
+
+    <div id="tooltip"></div>
 
     <script type="module">
         import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
@@ -125,17 +145,23 @@
         const viewer = document.querySelector('#main-viewer');
         const modelSelect = document.querySelector('#model-select');
         const progressBar = document.querySelector('#progress-bar');
+        const tooltip = document.querySelector('#tooltip');
         
-        let targetExplosion = 0;
         let currentExplosion = 0;
-        const lerpFactor = 0.1;
+        let explodeDirection = 0;
+        const explodeSpeed = 0.08;
+        
         let internalScene = null;
+        let activeCamera = null;
         let isAnimating = false;
+
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
 
         modelSelect.addEventListener('change', (e) => {
             viewer.src = e.target.value;
-            targetExplosion = 0;
             currentExplosion = 0;
+            explodeDirection = 0;
         });
 
         const getInternalScene = () => {
@@ -147,7 +173,10 @@
         const updateExplosion = () => {
             if (!internalScene) return;
 
-            currentExplosion += (targetExplosion - currentExplosion) * lerpFactor;
+            if (explodeDirection !== 0) {
+                currentExplosion += explodeDirection * explodeSpeed;
+                currentExplosion = Math.max(0, Math.min(currentExplosion, 10));
+            }
 
             internalScene.traverse((obj) => {
                 if (obj.isMesh) {
@@ -170,14 +199,40 @@
         };
 
         window.addEventListener('keydown', (e) => {
-            if (e.key === '.') targetExplosion = Math.min(targetExplosion + 0.5, 10);
-            if (e.key === ',') targetExplosion = Math.max(targetExplosion - 0.5, 0);
+            if (e.key === '.') explodeDirection = 1;
+            if (e.key === ',') explodeDirection = -1;
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (e.key === '.' && explodeDirection === 1) explodeDirection = 0;
+            if (e.key === ',' && explodeDirection === -1) explodeDirection = 0;
+        });
+
+        viewer.addEventListener('mousemove', (event) => {
+            if (!internalScene || !activeCamera) return;
+
+            const rect = viewer.getBoundingClientRect();
+            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, activeCamera);
+            const intersects = raycaster.intersectObjects(internalScene.children, true);
+
+            const hit = intersects.find(i => i.object.isMesh);
+            if (hit) {
+                tooltip.style.display = 'block';
+                tooltip.style.left = `${event.clientX + 15}px`;
+                tooltip.style.top = `${event.clientY + 15}px`;
+                tooltip.textContent = hit.object.name || hit.object.uuid.slice(0, 8);
+            } else {
+                tooltip.style.display = 'none';
+            }
         });
 
         viewer.addEventListener('load', () => {
             internalScene = getInternalScene();
-            
             if (internalScene) {
+                activeCamera = internalScene.camera;
                 internalScene.traverse((obj) => {
                     if (obj.isMesh) obj.userData = {}; 
                 });
