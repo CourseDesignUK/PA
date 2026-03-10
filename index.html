@@ -171,6 +171,7 @@
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
+    controls.target.set(0, 0, 0);
 
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
@@ -208,16 +209,21 @@
 
         loader.load(`./models/${filename}`, (gltf) => {
             currentModel = gltf.scene;
+            
+            // Recenter geometry to origin
             const box = new THREE.Box3().setFromObject(currentModel);
             const center = box.getCenter(new THREE.Vector3());
+            currentModel.position.x += (currentModel.position.x - center.x);
+            currentModel.position.y += (currentModel.position.y - center.y);
+            currentModel.position.z += (currentModel.position.z - center.z);
             
-            currentModel.position.sub(center);
             currentModel.scale.set(0.3, 0.3, 0.3);
 
             currentModel.traverse((child) => {
                 if (child.isMesh) {
                     child.material = child.material.clone();
                     child.userData.originalPos = child.position.clone();
+                    
                     const worldPos = new THREE.Vector3();
                     child.getWorldPosition(worldPos);
                     child.userData.explodeVec = worldPos.clone().normalize();
@@ -225,12 +231,11 @@
                 }
             });
             scene.add(currentModel);
+            controls.reset();
         });
     }
 
     modelSelector.addEventListener('change', (e) => loadModel(e.target.value));
-    
-    // Default load from /models/
     loadModel('90LFE2.glb');
 
     window.addEventListener('keydown', (e) => {
