@@ -3,252 +3,117 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>ATTP | AR Locator</title>
+    <title>ATTP | Wildfire AR Module</title>
     
     <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
 
     <style>
         :root {
-            --primary-blue: #00d2ff;
-            --dark-bg: #0a0e14;
-            --glass-bg: rgba(10, 14, 20, 0.85);
-            --border-glow: rgba(0, 210, 255, 0.4);
-            --font-main: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            --attp-blue: #00d2ff;
+            --attp-warning: #ff3e3e;
+            --dark-glass: rgba(10, 14, 20, 0.9);
+            --ui-border: 1px solid rgba(0, 210, 255, 0.3);
         }
 
-        body {
-            margin: 0;
-            overflow: hidden;
-            font-family: var(--font-main);
-            background-color: var(--dark-bg);
-            color: white;
+        body { margin: 0; overflow: hidden; font-family: 'Consolas', monospace; color: white; }
+
+        /* Tactical HUD Header */
+        .hud-top {
+            position: absolute; top: 0; left: 0; width: 100%; height: 50px;
+            background: var(--dark-glass); border-bottom: 2px solid var(--attp-blue);
+            display: flex; align-items: center; padding: 0 20px; z-index: 100;
+            backdrop-filter: blur(10px); text-transform: uppercase; letter-spacing: 2px;
         }
 
-        /* Top Navigation Header */
-        .ui-header {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 60px;
-            background: var(--glass-bg);
-            border-bottom: 2px solid var(--primary-blue);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 20px;
-            box-sizing: border-box;
-            z-index: 10;
-            backdrop-filter: blur(10px);
+        /* Sidebar Telemetry */
+        .telemetry-panel {
+            position: absolute; top: 70px; right: 20px; width: 180px;
+            background: var(--dark-glass); border: var(--ui-border);
+            padding: 15px; z-index: 100; border-radius: 4px;
         }
 
-        .logo-text {
-            font-weight: 800;
-            letter-spacing: 2px;
-            color: var(--primary-blue);
-            text-transform: uppercase;
+        .data-row { font-size: 11px; margin-bottom: 8px; color: #aaa; }
+        .data-val { display: block; font-size: 14px; color: var(--attp-blue); font-weight: bold; }
+
+        /* Warning Banner */
+        .alert-system {
+            position: absolute; bottom: 100px; left: 50%; transform: translateX(-50%);
+            padding: 10px 30px; background: rgba(255, 62, 62, 0.2);
+            border: 1px solid var(--attp-warning); color: var(--attp-warning);
+            text-transform: uppercase; font-weight: bold; border-radius: 20px;
+            animation: pulse 2s infinite; display: none;
         }
 
-        /* Interaction Overlay */
-        .ui-overlay {
-            position: absolute;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 90%;
-            max-width: 400px;
-            background: var(--glass-bg);
-            border: 1px solid var(--border-glow);
-            border-radius: 8px;
-            padding: 15px;
-            text-align: center;
-            z-index: 10;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-        }
+        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
 
-        .status-indicator {
-            display: inline-block;
-            width: 10px;
-            height: 10px;
-            background: var(--primary-blue);
-            border-radius: 50%;
-            margin-right: 8px;
-            box-shadow: 0 0 8px var(--primary-blue);
-        }
-
-        .instruction {
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin: 0;
-        }
-
-        /* Scanning Reticle */
-        .reticle {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 250px;
-            height: 250px;
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            border-radius: 20px;
-            pointer-events: none;
-            z-index: 5;
-        }
-
-        .reticle::before {
-            content: '';
-            position: absolute;
-            top: -5px; left: -5px; width: 30px; height: 30px;
-            border-top: 4px solid var(--primary-blue);
-            border-left: 4px solid var(--primary-blue);
-        }
-
-        canvas.a-canvas {
-            filter: brightness(0.8) contrast(1.1);
+        /* Scanning Reticle Customization */
+        .reticle-box {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 280px; height: 280px; border: 1px solid rgba(0, 210, 255, 0.2);
+            pointer-events: none; z-index: 50;
         }
     </style>
 </head>
 
 <body>
-    <div class="ui-header">
-        <div class="logo-text">ATTP // SYSTEM</div>
+    <div class="hud-top">ATTP // WILDFIRE_SIM_V4.2</div>
+
+    <div class="telemetry-panel">
+        <div class="data-row">CORE TEMP<span class="data-val">1,240°C</span></div>
+        <div class="data-row">WIND VELOCITY<span class="data-val">24 KM/H NW</span></div>
+        <div class="data-row">SPREAD RATE<span class="data-val">1.2 M/MIN</span></div>
+        <div class="data-row">FUEL LOAD<span class="data-val">DRY VEG [HIGH]</span></div>
     </div>
 
-    <div class="reticle"></div>
-
-    <div class="ui-overlay">
-        <p class="instruction">
-            <span class="status-indicator"></span>
-            Point camera at HIRO marker
-        </p>
-    </div>
+    <div id="fire-alert" class="alert-system">Active Combustion Detected</div>
+    <div class="reticle-box"></div>
 
     <a-scene 
         embedded 
         vr-mode-ui="enabled: false"
-        arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;">
+        arjs="sourceType: webcam; debugUIEnabled: false;">
         
         <a-assets>
-            <a-asset-item id="targetModel" src="https://raw.githack.com/KhronosGroup/glTF-Sample-Models/master/2.0/BoxAnimated/glTF-Binary/BoxAnimated.glb"></a-asset-item>
+            <a-asset-item id="wildfire" src="https://raw.githack.com/KhronosGroup/glTF-Sample-Models/master/2.0/Lantern/glTF-Binary/Lantern.glb"></a-asset-item>
         </a-assets>
 
-        <a-marker preset="hiro">
-            <a-entity 
-                gltf-model="#targetModel" 
-                scale="0.5 0.5 0.5" 
-                position="0 0.5 0"
-                animation="property: rotation; to: 0 360 0; loop: true; dur: 5000; easing: linear">
-            </a-entity>
+        <a-marker preset="hiro" id="marker-hiro">
             
-            <a-plane 
+            <a-entity 
+                gltf-model="#wildfire" 
+                scale="0.1 0.1 0.1" 
+                position="0 0 0"
+                animation="property: scale; from: 0.08 0.08 0.08; to: 0.12 0.12 0.12; dur: 2000; dir: alternate; loop: true">
+            </a-entity>
+
+            <a-ring 
                 rotation="-90 0 0" 
-                width="1.5" 
-                height="1.5" 
-                material="src: url(https://i.imgur.com/8AD9XnS.png); transparent: true; opacity: 0.6; color: #00d2ff">
-            </a-plane>
+                radius-inner="1" 
+                radius-outer="1.5" 
+                color="#ff3e3e" 
+                opacity="0.4"
+                animation="property: material.opacity; from: 0.1; to: 0.5; dir: alternate; loop: true; dur: 1000">
+            </a-ring>
+
+            <a-light type="point" color="#ff3e3e" intensity="2" position="0 2 0"></a-light>
         </a-marker>
 
         <a-entity camera></a-entity>
     </a-scene>
-</body>
-</html>
-<div id="canvas-container"></div>
 
-<script type="importmap">
-    {
-        "imports": {
-            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-        }
-    }
-</script>
+    <script>
+        // UI Logic to handle detection alerts
+        const marker = document.querySelector('#marker-hiro');
+        const alertBox = document.querySelector('#fire-alert');
 
-<script type="module">
-    import * as THREE from 'three';
-    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        marker.addEventListener('markerFound', () => {
+            alertBox.style.display = 'block';
+        });
 
-    let scene, camera, renderer, controls, currentModel;
-
-    function initScene() {
-        scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x050505);
-
-        camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(0, 1, 3);
-
-        renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        document.getElementById('canvas-container').appendChild(renderer.domElement);
-
-        const light = new THREE.AmbientLight(0xffffff, 2);
-        scene.add(light);
-
-        const dirLight = new THREE.DirectionalLight(0xffffff, 1);
-        dirLight.position.set(5, 5, 5);
-        scene.add(dirLight);
-
-        controls = new OrbitControls(camera, renderer.domElement);
-        animate();
-    }
-
-    async function loadModel(fileName) {
-        if (currentModel) scene.remove(currentModel);
-        
-        const loader = new GLTFLoader();
-        const status = document.getElementById('status');
-        const log = document.getElementById('log');
-
-        status.textContent = "LOADING...";
-        
-        loader.load(
-            `./models/${fileName}`,
-            (gltf) => {
-                currentModel = gltf.scene;
-                scene.add(currentModel);
-                
-                // Center model
-                const box = new THREE.Box3().setFromObject(currentModel);
-                const center = box.getCenter(new THREE.Vector3());
-                currentModel.position.sub(center);
-
-                status.textContent = "ENGINE ACTIVE";
-                log.textContent = `Loaded: ${fileName}`;
-            },
-            (xhr) => {
-                const percent = Math.round((xhr.loaded / xhr.total) * 100);
-                log.textContent = `Downloading: ${percent}%`;
-            },
-            (error) => {
-                status.textContent = "LOAD ERROR";
-                log.textContent = "File not found in /models/";
-                console.error(error);
-            }
-        );
-    }
-
-    function animate() {
-        requestAnimationFrame(animate);
-        if (currentModel) currentModel.rotation.y += 0.005;
-        controls.update();
-        renderer.render(scene, camera);
-    }
-
-    window.addEventListener('resize', () => {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-    });
-
-    document.getElementById('load-btn').addEventListener('click', () => {
-        const file = document.getElementById('model-name').value;
-        loadModel(file);
-    });
-
-    initScene();
-</script>
+        marker.addEventListener('markerLost', () => {
+            alertBox.style.display = 'none';
+        });
+    </script>
 </body>
 </html>
