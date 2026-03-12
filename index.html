@@ -2,38 +2,42 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>ATTP | Persistent Wildfire</title>
-    
+    <title>ATTP | Locked Wildfire</title>
     <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+</head>
 
-    <script>
-        // Custom Component: Lock to World
-        AFRAME.registerComponent('lock-to-world', {
-            init: function () {
-                const el = this.el;
-                const marker = document.querySelector('#marker-hiro');
-                const scene = this.el.sceneEl;
+<body style="margin: 0; overflow: hidden;">
+    <a-scene 
+        embedded 
+        vr-mode-ui="enabled: false"
+        arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix;">
 
-                marker.addEventListener('markerFound', () => {
-                    // Update UI status
-                    document.getElementById('tracking-status').innerText = "LOCK ACQUIRED";
-                    document.getElementById('status-dot').style.background = "#00ff00";
-                    
-                    // Show the model
-                    el.setAttribute('visible', 'true');
-                });
+        <a-assets>
+            <a-asset-item id="wildfire" src="https://raw.githack.com/KhronosGroup/glTF-Sample-Models/master/2.0/Lantern/glTF-Binary/Lantern.glb"></a-asset-item>
+        </a-assets>
 
-                marker.addEventListener('markerLost', () => {
-                    // Get current world position/rotation before marker is lost
-                    const worldPos = new THREE.Vector3();
-                    const worldRot = new THREE.Quaternion();
-                    const worldScale = new THREE.Vector3();
-                    
-                    el.object3D.getWorldPosition(worldPos);
-                    el.object3D.getWorldQuaternion(worldRot);
-                    el.object3D.getWorldScale(worldScale);
+        <a-marker 
+            preset="hiro" 
+            smooth="true" 
+            smoothCount="10" 
+            smoothTolerance="0.01" 
+            smoothThreshold="5">
+            
+            <a-entity 
+                gltf-model="#wildfire" 
+                scale="0.1 0.1 0.1" 
+                position="0 0 0" 
+                rotation="0 0 0">
+            </a-entity>
+
+            <a-ring rotation="-90 0 0" radius-inner="0.8" radius-outer="1" color="#00d2ff" opacity="0.5"></a-ring>
+        </a-marker>
+
+        <a-entity camera></a-entity>
+    </a-scene>
+</body>
+</html>
 
                     // Re-parent to scene so it doesn't disappear with the marker
                     scene.object3D.add(el.object3D);
